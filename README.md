@@ -1,2 +1,9 @@
-# esgi-scala-m1
-projet scala s1
+# Projet M1 S1 Scala
+Membre: 
+- 
+
+## Build
+scalac Main.scala
+
+## Run
+scala Main
