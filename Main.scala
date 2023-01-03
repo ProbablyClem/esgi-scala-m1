@@ -102,11 +102,18 @@ case class Canvas(width: Int = 0, height: Int = 0, pixels: Vector[Vector[Pixel]]
    * Print the canvas in the console
    */
   def display: Unit = {
+    
     if (pixels.size == 0) {
       println("Empty Canvas")
     } else {
       println(s"Size: $width x $height")
-      // TODO
+      println(pixels)
+      for(y <- 0 until height) {
+        for(x <- 0 until width) {
+          print(pixels(y)(x))
+        }
+        println
+      }
     }
   }
 
