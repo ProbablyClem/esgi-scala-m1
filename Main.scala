@@ -46,6 +46,7 @@ object Main extends App {
       case "exit" => Canvas.exit
       case "dummy" => Canvas.dummy
       case "dummy2" => Canvas.dummy2
+      case "new_canvas" => Canvas.newCanvas 
       // TODO: Add command here
       case _ => Canvas.default
     }
@@ -193,6 +194,28 @@ object Canvas {
         )
       )
       
+      (dummyCanvas, Status())
+    }
+
+    /**
+   * Create a static Canvas
+   */
+  def newCanvas(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = 
+    if (arguments.size !=3) 
+      (canvas, Status(error = true, message = "action newCanvas expects 3 arguments"))
+    else  {
+      val width = arguments(0).toInt
+      val height = arguments(1).toInt
+      val color = arguments(2).charAt(0)
+
+      var pixels = (0 until height).map(y => (0 until width).map(x => Pixel(x, y, color )).toVector).toVector
+      
+      val dummyCanvas = Canvas(
+        width = width,
+        height = height,
+        pixels = pixels
+      )
+
       (dummyCanvas, Status())
     }
 
