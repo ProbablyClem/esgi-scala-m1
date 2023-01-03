@@ -80,16 +80,20 @@ object Pixel {
    * Create a Pixel from a string "x,y"
    */
   def apply(s: String): Pixel = {
-    // TODO
-    Pixel(0, 0)
+    val coordinates = s.split(',')
+    val x = coordinates(0).toInt
+    val y = coordinates(1).toInt
+    Pixel(x, y, '.')
   }
 
   /**
    * Create a Pixel from a string "x,y" and a color 
    */
   def apply(s: String, color: Char): Pixel = {
-    // TODO
-    Pixel(0, 0)
+   val coordinates = s.split(',')
+    val x = coordinates(0).toInt
+    val y = coordinates(1).toInt
+    Pixel(x, y, color)
   }
 }
 
@@ -107,7 +111,6 @@ case class Canvas(width: Int = 0, height: Int = 0, pixels: Vector[Vector[Pixel]]
       println("Empty Canvas")
     } else {
       println(s"Size: $width x $height")
-      println(pixels)
       for(y <- 0 until height) {
         for(x <- 0 until width) {
           print(pixels(y)(x))
