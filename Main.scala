@@ -42,7 +42,8 @@ object Main extends App {
    * Execute various actions depending on an action command and optionnaly a Canvas
    */
   def execute(action: Seq[String], canvas: Canvas): (Canvas, Status) = {
-    val execution: (Seq[String], Canvas) => (Canvas, Status) = action.head match {
+    try{
+      val execution: (Seq[String], Canvas) => (Canvas, Status) = action.head match {
       case "exit" => Canvas.exit
       case "dummy" => Canvas.dummy
       case "dummy2" => Canvas.dummy2
@@ -52,6 +53,10 @@ object Main extends App {
     }
 
     execution(action.tail, canvas)
+    }
+    catch {
+      case e: NumberFormatException => (canvas, Status(error = true, message = "Les arguments doivent être des entiers"))
+    }
   }
 }
 
@@ -184,7 +189,7 @@ object Canvas {
    */
   def dummy2(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = 
     if (arguments.size > 0) 
-      (canvas, Status(error = true, message = "dummy action does not excpect arguments"))
+      (canvas, Status(error = true, message = "dummy action does not expect arguments"))
     else  {
       val dummyCanvas = Canvas(
         width = 3,
