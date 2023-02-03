@@ -1,6 +1,5 @@
-import scala.collection.immutable.ArraySeq
-
-package commands
+import scala.collection.immutable.ArraySeq 
+import scala.io.Source
 
 
 
@@ -61,52 +60,6 @@ object Main extends App {
   }
 }
 
-case class Triangle () extends Polygon ():
-
-  private val triangle = flawf ("Triangle")
-
-  def addPoints (x: VectorD, y: VectorD): Unit =
-    if x.dim != 3 || y.dim != 3 { triangle ("addPoints", "need exactly 3 vertices to make a triangle")}
-    for i <- x.indices do addPoint (x(i).toInt, y(i).toInt)
-  end addPoints
-  def setFrame (tx: Double, ty: Double, w: Double, h: Double): Unit =
-    val x = VectorD (0, 0, w) + tx
-    val y = VectorD (0, h, h) + ty
-    addPoints (x, y)
-  end setFrame
-
-end Triangle
-
-
-type PolygonShapeRectangular = RectangularShape | Polygon
-
-extension (s: PolygonShapeRectangular)
-  def CenterOfXIs(): Double =
-    s match
-      case _: RectangularShape => s.asInstanceOf [RectangularShape].getCenterX ()
-      case _: Polygon => s.asInstanceOf [Polygon].getBounds2D ().getCenterX ()
-  end CenterOfXIs
-  def CenterOfYIs(): Double =
-    s match
-      case _: RectangularShape => s.asInstanceOf [RectangularShape].getCenterY ()
-      case _: Polygon => s.asInstanceOf [Polygon].getBounds2D ().getCenterY ()
-  end CenterOfYIs
-  def WidthIs(): Double =
-    s match
-      case _: RectangularShape => s.asInstanceOf [RectangularShape].getWidth ()
-      case _: Polygon => s.asInstanceOf [Polygon].getBounds2D ().getWidth ()
-  end WidthIs
-  def HeightIs(): Double =
-    s match
-      case _: RectangularShape => s.asInstanceOf [RectangularShape].getHeight ()
-      case _: Polygon => s.asInstanceOf [Polygon].getBounds2D ().getHeight ()
-  end HeightIs
-  def setFrame (x: Double, y: Double, w: Double, h: Double): Unit =
-    s match
-      case _: RectangularShape => s.asInstanceOf [RectangularShape].setFrame (x, y, w, h)
-      case _: Polygon => s.asInstanceOf [Polygon].setFrame (x, y, w, h)
-  end setFrame
-
 /**
  * Define the status of the previous execution
  */
@@ -116,11 +69,8 @@ case class Status(
   message: String = ""
 )
 
-case class DrawRectangle(x1: Int, y1: Int, x2: Int, y2: Int) extends Command
-
-case class BucketFill(x: Int, y: Int, filler: Char) extends Command
-
-case class DrawLine(x1: Int, y1: Int, x2: Int, y2: Int) extends Command
+case class DrawRectangle(x1: Int, y1: Int, x2: Int, y2: Int) 
+case class BucketFill(x: Int, y: Int, filler: Char) 
 
 /**
  * A pixel is defined by its coordinates along with its color as a char
@@ -242,10 +192,11 @@ object Canvas {
   /**
    * Create canvas from image load
    */
-  def load_image(arguments: Seq[String], canvas: Canvas): (Canvas, Status) =
-    val happy:Vector[String] =Source.fromFile("my_file").getLines().toVector
-      (load_imageCanvas, Status())
-    }
+  def load_image(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
+    val fileName = "my_file"
+    val happy = scala.io.Source.fromFile(fileName).getLines().toVector
+    (canvas, Status())}
+    
 
 
   /**
@@ -287,6 +238,75 @@ object Canvas {
 
       (dummyCanvas, Status())
     }
+       /**
+   * Create a Rectangle
+   */ 
+   def DrawRectangle(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
+    // parse arguments to get x1, y1, x2, y2
+    if (arguments.length != 4) {
+      return (canvas, Status(error = true, message = "Incorrect number of arguments for DrawRectangle"))
+    }
+    val x1 = arguments(0).toInt
+    val y1 = arguments(1).toInt
+    val x2 = arguments(2).toInt
+    val y2 = arguments(3).toInt
 
+    // validate the arguments to make sure they form a rectangle
+    if (x1 >= x2 || y1 >= y2) {
+      return (canvas, Status(error = true, message = "Invalid arguments for DrawRectangle"))
+    }
+
+    // draw the rectangle on the canvas
+    var newCanvas = canvas
+    for (x <- x1 to x2) {
+      newCanvas = newCanvas.update(Pixel(x, y1, 'x'))
+      newCanvas = newCanvas.update(Pixel(x, y2, 'x'))
+    }
+    for (y <- y1 to y2) {
+      newCanvas = newCanvas.update(Pixel(x1, y, 'x'))
+      newCanvas = newCanvas.update(Pixel(x2, y, 'x'))
+    }
+
+    (newCanvas, Status(message = "DrawRectangle complete"))
+  }
+  
+   def BucketFill(action: Seq[String], canvas: Canvas): (Canvas, Status) = {
+    if (action.length != 3) {
+      return (canvas, Status(error = true, message = "ERROR: Invalid number of arguments for command 'BucketFill'"))
+    }
+
+    try {
+      val x = action(0).toInt
+      val y = action(1).toInt
+      val filler = action(2)(0)
+
+      if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
+        return (canvas, Status(error = true, message = "ERROR: Coordinates outside of canvas"))
+      }
+
+      def fill(x: Int, y: Int, color: Char, pixels: Vector[Vector[Pixel]]): Vector[Vector[Pixel]] = {
+        if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
+          return pixels
+        }
+
+        val currentPixel = pixels(y)(x)
+
+        if (currentPixel.color == color) {
+          return pixels
+        }
+
+        val newPixel = currentPixel.copy(color = color)
+
+        fill(x + 1, y, color, fill(x - 1, y, color, fill(x, y + 1, color, fill(x, y - 1, color, pixels.updated(y, pixels(y).updated(x, newPixel)))))
+        )}
+
+      val newPixels = fill(x, y, filler, canvas.pixels)
+      (canvas.copy(pixels = newPixels), Status(message = "Bucket filled successfully"))
+
+    } catch {
+      case e: NumberFormatException => (canvas, Status(error = true, message = "ERROR: Invalid arguments for command 'BucketFill'"))
+    }
+  }
   // TODO: Add any useful method
+   
 }
