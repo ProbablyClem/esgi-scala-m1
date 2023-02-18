@@ -307,6 +307,41 @@ object Canvas {
       case e: NumberFormatException => (canvas, Status(error = true, message = "ERROR: Invalid arguments for command 'BucketFill'"))
     }
   }
-  // TODO: Add any useful method
    
+def update_pixel(canvas: String, pixel: (Int, Int), color: Char): (String, Status) = {
+  val (x, y) = pixel
+  val rows = canvas.split('\n')
+  val currentRow = rows(y)
+  val updatedRow = currentRow.updated(x, color)
+  val updatedRows = rows.updated(y, updatedRow)
+  val updatedCanvas = updatedRows.mkString("\n")
+  (updatedCanvas, Status(message = "Pixel updated successfully."))
 }
+  def drawFill(canvas: Array[Array[Char]], position: (Int, Int), newColor: Char): (Array[Array[Char]], Status) = {
+  val rows = canvas.length
+  val columns = canvas(0).length
+  val color = canvas(position._1)(position._2)
+  val visited = Array.ofDim[Boolean](rows, columns)
+
+
+  def fill(x: Int, y: Int): Unit = {
+    if (x < 0 || x >= rows || y < 0 || y >= columns || canvas(x)(y) != color || visited(x)(y)) {
+      return
+    }
+    canvas(x)(y) = newColor
+    visited(x)(y) = true
+    fill(x - 1, y)
+    fill(x + 1, y)
+    fill(x, y - 1)
+    fill(x, y + 1)
+  }
+
+  fill(position._1, position._2)
+  (canvas, Status(message ="OK"))
+}
+
+
+}  // TODO: Add any useful method
+   
+
+
