@@ -51,6 +51,8 @@ object Main extends App {
       case "dummy2" => Canvas.dummy2
       case "new_canvas" => Canvas.newCanvas
       // TODO: Add command here
+      case "draw line" => Canvas.drawLine
+      case "draw rectangle" => Canvas.DrawRectangle 
       case "load_image"=> Canvas.load_image
       case _ => Canvas.default
 
@@ -193,10 +195,26 @@ object Canvas {
    * Create canvas from image load
    */
   def load_image(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
-    val fileName = "my_file"
-    val happy = scala.io.Source.fromFile(fileName).getLines().toVector
-    (canvas, Status())}
-    
+  if (arguments.size != 1) {
+    return (canvas, Status(error = true, message = "load_image action expects 1 argument"))
+  }
+
+  val fileName = arguments.head
+  val fileContent = Source.fromFile(fileName).getLines().toVector
+
+  val pixelMatrix = fileContent.zipWithIndex.map {
+    case (line, y) => line.zipWithIndex.map { case (char, x) => Pixel(x, y, char) }.toVector
+  }
+
+  val updatedCanvas = Canvas(
+    width = pixelMatrix.head.length,
+    height = pixelMatrix.length,
+    pixels = pixelMatrix
+  )
+
+  (updatedCanvas, Status(message = "Image loaded successfully"))
+}
+
 
 
   /**
@@ -238,6 +256,38 @@ object Canvas {
 
       (dummyCanvas, Status())
     }
+
+    /**Draw a line */
+
+def drawLine(arguments: Seq[String], canvas: Canvas): (Canvas, Status) = {
+  if (arguments.length != 4) {
+    return (canvas, Status(error = true, message = "Incorrect number of arguments for draw line"))
+  }
+
+  val pixel1 = Pixel(arguments(0))
+  val pixel2 = Pixel(arguments(1))
+  val color = arguments(2).charAt(0)
+
+  if (pixel1.x != pixel2.x && pixel1.y != pixel2.y) {
+    return (canvas, Status(error = true, message = "Invalid arguments for draw line: only vertical and horizontal lines are supported"))
+  }
+
+  val (start, end) = if (pixel1.x == pixel2.x) {
+    if (pixel1.y < pixel2.y) (pixel1, pixel2) else (pixel2, pixel1)
+  } else {
+    if (pixel1.x < pixel2.x) (pixel1, pixel2) else (pixel2, pixel1)
+  }
+
+  val linePixels = if (start.x == end.x) {
+    (start.y to end.y).map(y => Pixel(start.x, y, color))
+  } else {
+    (start.x to end.x).map(x => Pixel(x, start.y, color))
+  }
+
+  val newCanvas = canvas.updates(linePixels)
+  (newCanvas, Status(message = "Line drawn successfully"))
+}
+   
        /**
    * Create a Rectangle
    */ 
